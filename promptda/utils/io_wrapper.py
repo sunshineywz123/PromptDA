@@ -46,8 +46,8 @@ def load_image(image_path, to_tensor=True, max_size=1008, multiple_of=14):
         tar_w = ensure_multiple_of(w * scale)
         image = cv2.resize(image, (tar_w, tar_h), interpolation=cv2.INTER_AREA)
     if to_tensor:
-        return to_tensor_func(image)
-    return image
+        return to_tensor_func(image),scale
+    return image,scale
 
 
 def load_depth(depth_path, to_tensor=True):
@@ -55,8 +55,11 @@ def load_depth(depth_path, to_tensor=True):
     Load depth from path and convert to tensor
     '''
     if depth_path.endswith('.png'):
+        # import ipdb;ipdb.set_trace()
         depth = np.asarray(imageio.imread(depth_path)).astype(np.float32)
         depth = depth / 1000.
+        # import ipdb;ipdb.set_trace()
+        # depth[depth<1] = depth.max()
     elif depth_path.endswith('.npz'):
         depth = np.load(depth_path)['depth']
     else:

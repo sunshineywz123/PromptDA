@@ -188,3 +188,6 @@ glove
 *.ipynb
 *.ply
 3rdparty
+assets/gaosu/center_camera_fov30-intrinsic.json
+assets/gaosu/pts_depth.npz
+depth-anything/prompt-depth-anything-vitl/model.ckpt
