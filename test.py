@@ -10,11 +10,14 @@ from PIL import Image
 from promptda.promptda import PromptDA
 from promptda.utils.io_wrapper import load_depth, load_image, save_depth
 
-DEVICE = 'cuda'
 import sys
 
+from tqdm import tqdm
 import ipdb
 import ptvsd
+
+DEVICE = 'cuda'
+model = PromptDA.from_pretrained("/iag_ad_01/ad/yuanweizhong/PromptDA/depth-anything/prompt-depth-anything-vitl/model.ckpt").to(DEVICE).eval()
 
 if 0:
     ptvsd.enable_attach(address=('0.0.0.0', 5691))
@@ -54,7 +57,6 @@ def process_single_file(output_path, image_path, prompt_depth_path, intrinsic_pa
     image = image.to(DEVICE)
     prompt_depth = load_depth(prompt_depth_path).to(DEVICE)  # 192x256, ARKit LiDAR depth in meters
 
-    model = PromptDA.from_pretrained("depth-anything/prompt-depth-anything-vitl/model.ckpt").to(DEVICE).eval()
     depth = model.predict(image, prompt_depth)  # HxW, depth in meters
 
     save_depth(depth, prompt_depth=prompt_depth, image=image)
@@ -104,20 +106,20 @@ def main(output_path, image_dir, prompt_depth_dir, intrinsic_path):
         return
 
     # 批量处理
-    for image_path, depth_path in zip(image_files, depth_files):
-        print(f"正在处理图像: {image_path} 和深度文件: {depth_path}")
+    for image_path, depth_path in tqdm(zip(image_files, depth_files)):
         process_single_file(output_path, image_path, depth_path, intrinsic_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="批量处理深度图并生成点云")
-    parser.add_argument("--output_path", type=str, required=True, help="指定输出路径")
-    parser.add_argument("--image_dir", type=str, required=True, help="指定输入图像目录")
-    parser.add_argument("--prompt_depth_dir", type=str, required=True, help="指定深度图目录")
-    parser.add_argument("--intrinsic_path", type=str, required=True, help="指定相机内参路径")
+    parser.add_argument("--output_path", type=str, required=True, help="指定输出路径",default="./output")
+    parser.add_argument("--root_path", type=str, required=True, help="指定根路径")
     args = parser.parse_args()
 
+    image_dir = os.path.join(args.root_path, "lidar", "top_center_lidar_depth")
+    prompt_depth_dir = os.path.join(args.root_path, "lidar", "top_center_lidar_depth")
+    intrinsic_path = os.path.join(args.root_path, f"calib/center_camera_fov30/center_camera_fov30-intrinsic.json")
     try:
-        main(args.output_path, args.image_dir, args.prompt_depth_dir, args.intrinsic_path)
+        main(args.output_path, image_dir, prompt_depth_dir, intrinsic_path)
     except:
         type, value, traceback = sys.exc_info()
         ipdb.post_mortem(traceback)
