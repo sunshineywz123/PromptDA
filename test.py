@@ -60,7 +60,7 @@ def process_single_file(output_path, image_path, prompt_depth_path, intrinsic_pa
     depth = model.predict(image, prompt_depth)  # HxW, depth in meters
 
     save_depth(depth, prompt_depth=prompt_depth, image=image)
-    prompt_depth_resized = cv2.resize((prompt_depth[0][0] * 1000).cpu().numpy().astype(np.uint16), (image.shape[3], image.shape[2]))
+    prompt_depth_resized = cv2.resize((prompt_depth[0][0] * 1000).cpu().numpy().astype(np.float32), (image.shape[3], image.shape[2]))
     cv2.imwrite(os.path.join(output_path, f"{os.path.basename(image_path)}_prompt_depth_resized.png"), prompt_depth_resized)
     width = depth.shape[3]
     height = depth.shape[2]
